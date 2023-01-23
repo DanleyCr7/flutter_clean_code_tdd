@@ -1,19 +1,13 @@
-import 'package:faker/faker.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
+import 'package:faker/faker.dart';
 
-class RemoteAuthentication {
-  HttpClient httpClient;
-  String url;
-  RemoteAuthentication({required this.httpClient, required this.url});
-  Future<void> auth() async {
-    await httpClient.request(url: url);
-  }
-}
+//domain
+import 'package:flutter_tdd/domain/usecases/authentication.dart';
 
-abstract class HttpClient {
-  Future<void>? request({required String url});
-}
+// data layer
+import 'package:flutter_tdd/data/http/http.dart';
+import 'package:flutter_tdd/data/usecases/usecases.dart';
 
 class HttpClientSpy extends Mock implements HttpClient {}
 
@@ -29,8 +23,20 @@ void main() {
   });
 
   test('Should call HttpClient with correct URL', () async {
-    await sut.auth();
+    final params = AuthenticationParams(
+        email: faker.internet.email(), secret: faker.internet.password());
 
-    verify(httpClient.request(url: url));
+    await sut.auth(params);
+
+    verify(httpClient.request(
+        url: url,
+        method: 'post',
+        body: {'email': params.email, 'password': params.secret}));
+  });
+
+  test('Should call HttpClient with correct Method', () async {
+    await sut.token();
+
+    verify(httpClient.request(url: url, method: 'get'));
   });
 }
